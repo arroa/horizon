@@ -40,3 +40,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# leftover from the old web/ folder
+/web/
+
+# local model files (too large for git)
+*.xlsx
+analizador*.html
+Analizador*.html

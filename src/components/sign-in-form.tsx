@@ -9,6 +9,10 @@ type Props = {
   clerkEnabled: boolean;
 };
 
+function isValidEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+}
+
 export function SignInForm({ devBypass, clerkEnabled }: Props) {
   if (devBypass) return <DevSignInForm />;
   if (clerkEnabled) return <ClerkSignInForm />;
@@ -24,28 +28,48 @@ export function SignInForm({ devBypass, clerkEnabled }: Props) {
   );
 }
 
+function FieldHint({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="mt-2 rounded-lg border border-[#ead7c8] bg-[#fbf4ee] px-3 py-2 text-[13px] leading-snug text-[#7a4a2e]">
+      {children}
+    </p>
+  );
+}
+
 function DevSignInForm() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
+  const [fieldError, setFieldError] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
     setError("");
+
+    const trimmed = email.trim();
+    if (!trimmed) {
+      setFieldError("Escribe tu correo para continuar.");
+      return;
+    }
+    if (!isValidEmail(trimmed)) {
+      setFieldError("Revisa el formato del correo (ej. tu@empresa.com).");
+      return;
+    }
+
+    setFieldError("");
     setLoading(true);
     try {
       const res = await fetch("/api/auth/dev-login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        credentials: "same-origin",
+        body: JSON.stringify({ email: trimmed }),
       });
       if (!res.ok) {
         setError("No se pudo entrar en modo desarrollo.");
         return;
       }
-      router.push("/modelo");
-      router.refresh();
+      window.location.assign("/modelo");
     } catch {
       setError("Error inesperado.");
     } finally {
@@ -60,18 +84,27 @@ function DevSignInForm() {
       <p className="mt-3 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900">
         Modo desarrollo: sin OTP ni Clerk. Igual que Xpaces / ControlX.
       </p>
-      <form onSubmit={onSubmit} className="mt-6 space-y-4">
+      <form onSubmit={onSubmit} noValidate className="mt-6 space-y-4">
         <label className="block text-sm">
           Email
           <input
             type="email"
-            required
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="mt-1.5 w-full rounded-xl border border-[var(--line)] px-4 py-3"
+            onChange={(e) => {
+              setEmail(e.target.value);
+              if (fieldError) setFieldError("");
+            }}
+            aria-invalid={Boolean(fieldError)}
+            className={
+              fieldError
+                ? "mt-1.5 w-full rounded-xl border border-[#c47a4a] bg-[#fffaf6] px-4 py-3 outline-none"
+                : "mt-1.5 w-full rounded-xl border border-[var(--line)] px-4 py-3 outline-none focus:border-[var(--green)]"
+            }
             placeholder="tu@empresa.com"
+            autoComplete="email"
           />
         </label>
+        {fieldError && <FieldHint>{fieldError}</FieldHint>}
         {error && <p className="text-sm text-red-600">{error}</p>}
         <button
           type="submit"
@@ -92,6 +125,7 @@ function ClerkSignInForm() {
   const [code, setCode] = useState("");
   const [step, setStep] = useState<"email" | "code">("email");
   const [error, setError] = useState("");
+  const [fieldError, setFieldError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const signIn = clerkSignIn.signIn;
@@ -105,9 +139,21 @@ function ClerkSignInForm() {
     event.preventDefault();
     if (!signIn) return;
     setError("");
+
+    const trimmed = email.trim();
+    if (!trimmed) {
+      setFieldError("Escribe tu correo para continuar.");
+      return;
+    }
+    if (!isValidEmail(trimmed)) {
+      setFieldError("Revisa el formato del correo (ej. tu@empresa.com).");
+      return;
+    }
+
+    setFieldError("");
     setLoading(true);
     try {
-      const result = await signIn.create({ identifier: email.trim().toLowerCase() });
+      const result = await signIn.create({ identifier: trimmed.toLowerCase() });
       const factor = result.supportedFirstFactors?.find((item) => item.strategy === "email_code");
       if (!factor || !("emailAddressId" in factor)) {
         setError("Activa el código por email en Clerk.");
@@ -129,6 +175,13 @@ function ClerkSignInForm() {
     event.preventDefault();
     if (!signIn || !setActive) return;
     setError("");
+
+    if (!code.trim()) {
+      setFieldError("Ingresa el código que te enviamos por correo.");
+      return;
+    }
+
+    setFieldError("");
     setLoading(true);
     try {
       const result = await signIn.attemptFirstFactor({ strategy: "email_code", code });
@@ -148,29 +201,48 @@ function ClerkSignInForm() {
     <div className="w-full max-w-md rounded-2xl border border-[var(--line)] bg-white p-8">
       <p className="kicker">Acceso</p>
       <h1 className="font-serif text-3xl">Entrar a Horizon</h1>
-      <form onSubmit={step === "email" ? sendCode : verifyCode} className="mt-6 space-y-4">
+      <form onSubmit={step === "email" ? sendCode : verifyCode} noValidate className="mt-6 space-y-4">
         {step === "email" ? (
           <label className="block text-sm">
             Email
             <input
               type="email"
-              required
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="mt-1.5 w-full rounded-xl border border-[var(--line)] px-4 py-3"
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (fieldError) setFieldError("");
+              }}
+              aria-invalid={Boolean(fieldError)}
+              className={
+                fieldError
+                  ? "mt-1.5 w-full rounded-xl border border-[#c47a4a] bg-[#fffaf6] px-4 py-3 outline-none"
+                  : "mt-1.5 w-full rounded-xl border border-[var(--line)] px-4 py-3 outline-none focus:border-[var(--green)]"
+              }
+              placeholder="tu@empresa.com"
+              autoComplete="email"
             />
           </label>
         ) : (
           <label className="block text-sm">
             Código
             <input
-              required
               value={code}
-              onChange={(e) => setCode(e.target.value)}
-              className="mt-1.5 w-full rounded-xl border border-[var(--line)] px-4 py-3"
+              onChange={(e) => {
+                setCode(e.target.value);
+                if (fieldError) setFieldError("");
+              }}
+              aria-invalid={Boolean(fieldError)}
+              className={
+                fieldError
+                  ? "mt-1.5 w-full rounded-xl border border-[#c47a4a] bg-[#fffaf6] px-4 py-3 outline-none"
+                  : "mt-1.5 w-full rounded-xl border border-[var(--line)] px-4 py-3 outline-none focus:border-[var(--green)]"
+              }
+              placeholder="123456"
+              autoComplete="one-time-code"
             />
           </label>
         )}
+        {fieldError && <FieldHint>{fieldError}</FieldHint>}
         {error && <p className="text-sm text-red-600">{error}</p>}
         <button
           type="submit"

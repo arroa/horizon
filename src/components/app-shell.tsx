@@ -3,7 +3,10 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
+import { useModel } from "@/components/model-provider";
 import type { HorizonUser } from "@/lib/current-user";
+import { ModelUploadFeedback } from "@/components/model-upload-feedback";
+import { UploadModelButton } from "@/components/upload-model-button";
 
 const nav = [
   { href: "/modelo", label: "Modelo" },
@@ -15,6 +18,7 @@ const nav = [
 export function AppShell({ user, children }: { user: HorizonUser; children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { snapshot } = useModel();
 
   async function signOut() {
     if (user.via === "dev") {
@@ -39,6 +43,7 @@ export function AppShell({ user, children }: { user: HorizonUser; children: Reac
           </span>
         </Link>
         <div className="flex items-center gap-6">
+          <UploadModelButton />
           <nav className="hidden gap-6 text-[13px] text-[#42534c] md:flex">
             {nav.map((item) => (
               <Link
@@ -55,7 +60,13 @@ export function AppShell({ user, children }: { user: HorizonUser; children: Reac
           </button>
         </div>
       </header>
+      {!snapshot && (
+        <div className="border-b border-[#eadfce] bg-[#f8f4ed] px-6 py-2 text-center text-xs text-[#5f4d3d] lg:px-16">
+          Vista de ejemplo — usa <strong>Cargar modelo</strong> para leer el Excel de esta sesión.
+        </div>
+      )}
       {children}
+      <ModelUploadFeedback />
     </div>
   );
 }

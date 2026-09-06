@@ -61,10 +61,16 @@ export async function createDevSessionToken(userId: string): Promise<string> {
 export async function verifyDevSessionToken(token: string): Promise<string | null> {
   if (!isDevBypassEnabled()) return null;
 
-  const parts = token.split(".");
-  if (parts.length !== 3) return null;
+  const lastDot = token.lastIndexOf(".");
+  if (lastDot <= 0) return null;
 
-  const [userId, expStr, signature] = parts;
+  const signature = token.slice(lastDot + 1);
+  const rest = token.slice(0, lastDot);
+  const expDot = rest.lastIndexOf(".");
+  if (expDot <= 0) return null;
+
+  const userId = rest.slice(0, expDot);
+  const expStr = rest.slice(expDot + 1);
   const payload = `${userId}.${expStr}`;
   const expected = await sign(payload);
 

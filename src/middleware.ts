@@ -16,19 +16,20 @@ function hasClerkKeys() {
   return Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY);
 }
 
+async function hasDevSession(request: NextRequest) {
+  if (!isDevBypassEnabled()) return false;
+  return !!(await getDevSessionUserIdFromRequest(request));
+}
+
 async function guardWithoutClerk(request: NextRequest) {
   if (isPublicRoute(request)) return NextResponse.next();
-  if (isDevBypassEnabled() && (await getDevSessionUserIdFromRequest(request))) {
-    return NextResponse.next();
-  }
+  if (await hasDevSession(request)) return NextResponse.next();
   return NextResponse.redirect(new URL("/sign-in", request.url));
 }
 
 const clerkGuard = hasClerkKeys()
   ? clerkMiddleware(async (auth, request) => {
-      if (isDevBypassEnabled() && (await getDevSessionUserIdFromRequest(request))) {
-        return;
-      }
+      if (await hasDevSession(request)) return;
       if (!isPublicRoute(request)) {
         await auth.protect();
       }
