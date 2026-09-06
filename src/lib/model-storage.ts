@@ -13,10 +13,12 @@ export function loadModelSnapshot(): ModelSnapshot | null {
   if (!raw) return null;
   try {
     const snapshot = JSON.parse(raw) as ModelSnapshot;
-    // Snapshots guardados antes de monthLabels: recuperar títulos desde cualquier variable.
     if (!snapshot.monthLabels?.length) {
       const fromVar = snapshot.variables?.find((v) => v.months?.length)?.months?.map((m) => m.label);
       snapshot.monthLabels = fromVar ?? [];
+    }
+    if (snapshot.balance && (!snapshot.balance.monthNatures || snapshot.balance.monthNatures.length !== snapshot.balance.months.length)) {
+      snapshot.balance.monthNatures = snapshot.balance.months.map(() => "unknown");
     }
     return snapshot;
   } catch {

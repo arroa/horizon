@@ -8,6 +8,7 @@ import {
   orderAmbits,
   stripDomainPrefix,
 } from "./domain-order";
+import { balanceSheetNameFromRanges, parseBalanceStatement } from "./parse-balance";
 
 import type {
   DataType,
@@ -619,6 +620,14 @@ export async function parseModelFile(
     if (glossarySheet) sheetsToLoad.add(glossarySheet);
   }
 
+  const balanceSheet = balanceSheetNameFromRanges(probeNames);
+  if (balanceSheet) {
+    sheetsToLoad.add(balanceSheet);
+  } else {
+    const fallbackBalance = findSheetName(["Balance General", "Balance"], probe.SheetNames || []);
+    if (fallbackBalance) sheetsToLoad.add(fallbackBalance);
+  }
+
   report(35, "Cargando hojas del modelo…");
   await yieldToUi();
   const workbook = XLSX.read(data, {
@@ -626,7 +635,7 @@ export async function parseModelFile(
     sheets: [...sheetsToLoad],
     cellFormula: true,
     cellNF: true,
-    cellStyles: false,
+    cellStyles: true,
   });
 
   const namedRanges = extractNamedRanges(workbook).length ? extractNamedRanges(workbook) : probeNames;
@@ -641,7 +650,7 @@ export async function parseModelFile(
         sheets: [...sheetsToLoad],
         cellFormula: true,
         cellNF: true,
-        cellStyles: false,
+        cellStyles: true,
       });
       Object.assign(workbook.Sheets, reloaded.Sheets);
     }
@@ -671,7 +680,11 @@ export async function parseModelFile(
   await yieldToUi();
   const glossary = parseGlossary(workbook, namedRanges);
 
-  report(90, "Armando el recorrido…");
+  report(85, "Leyendo Balance general…");
+  await yieldToUi();
+  const balance = parseBalanceStatement(workbook, namedRanges);
+
+  report(92, "Armando el recorrido…");
   await yieldToUi();
   const domains = buildDomains(variables, glossary);
 
@@ -683,6 +696,7 @@ export async function parseModelFile(
     variables,
     glossary,
     monthLabels,
+    balance: balance ?? undefined,
   };
 }
 

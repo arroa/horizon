@@ -811,6 +811,286 @@ button, input { font: inherit; }
   padding-left: 18px;
 }
 
+.balance-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.balance-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.balance-meta {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.balance-range {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #42534c;
+}
+
+.balance-toolbar-right {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.balance-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.balance-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.balance-legend-item.nature-real {
+  background: #e7ebe7;
+  color: #3f4f47;
+}
+
+.balance-legend-item.nature-proy {
+  background: #e5f2ea;
+  color: #1f5a3d;
+}
+
+.balance-collapse-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.balance-ghost-btn {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--green);
+  cursor: pointer;
+}
+
+.balance-ghost-btn:hover {
+  background: #edf5ea;
+}
+
+.balance-collapse-btn {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 8px;
+  max-width: 100%;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+  font: inherit;
+  font-weight: 700;
+  color: inherit;
+  cursor: pointer;
+}
+
+.balance-collapse-btn.level-1 {
+  font-weight: 650;
+}
+
+.balance-collapse-chevron {
+  display: inline-block;
+  flex-shrink: 0;
+  margin-top: 2px;
+  font-size: 11px;
+  color: #6f8277;
+  transition: transform 0.15s ease;
+}
+
+.balance-collapse-chevron[data-open="1"] {
+  transform: rotate(90deg);
+}
+
+.balance-row-group .balance-col-account {
+  font-weight: 650;
+}
+
+.balance-row-detail .balance-col-account {
+  padding-left: 0;
+}
+
+.balance-row-detail td {
+  border-top: 1px solid #f2f4f2;
+  color: #56655e;
+}
+
+.balance-detail-label {
+  display: inline-block;
+  color: #56655e;
+  font-weight: 500;
+}
+
+.balance-table-wrap {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: white;
+  overflow: hidden;
+  max-height: min(70vh, 760px);
+}
+
+.balance-month-scroller {
+  flex: 0 0 auto;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border-bottom: 1px solid #e7ebe6;
+  background: #f3f5f3;
+  height: 16px;
+}
+
+.balance-month-scroller-track {
+  height: 1px;
+}
+
+.balance-table-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
+.balance-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  table-layout: fixed;
+}
+
+.balance-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--paper);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.balance-col-account {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  width: 38%;
+  min-width: 220px;
+  padding: 10px 14px;
+  text-align: left;
+  background: white;
+  border-right: 1px solid #e7ebe6;
+}
+
+.balance-table thead .balance-col-account {
+  z-index: 3;
+  background: var(--paper);
+}
+
+.balance-col-month {
+  width: calc(62% / 6);
+  padding: 10px 12px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.balance-table thead .balance-col-month {
+  vertical-align: bottom;
+}
+
+.balance-month-label {
+  display: block;
+}
+
+.balance-month-nature {
+  display: block;
+  margin-top: 2px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+
+.balance-col-month[data-nature="real"] {
+  background: #eef1ee;
+}
+
+.balance-col-month[data-nature="proy"] {
+  background: #f3faf6;
+}
+
+.balance-table thead .balance-col-month[data-nature="real"] {
+  background: #e4e8e4;
+  color: #3f4f47;
+}
+
+.balance-table thead .balance-col-month[data-nature="proy"] {
+  background: #e5f2ea;
+  color: #1f5a3d;
+}
+
+.balance-col-month.nature-boundary {
+  border-left: 2px solid #9bb5a4;
+}
+
+.balance-row-total .balance-col-month[data-nature="real"] {
+  background: #e0e6e0;
+}
+
+.balance-row-total .balance-col-month[data-nature="proy"] {
+  background: #ddeee4;
+}
+
+.balance-row-account td {
+  border-top: 1px solid #eef1ee;
+}
+
+.balance-row-total td {
+  border-top: 1px solid #d5dbd4;
+  background: #f3f6f2;
+  font-weight: 700;
+  color: #203a30;
+}
+
+.balance-row-total .balance-col-account {
+  background: #f3f6f2;
+}
+
+.balance-row-spacer td {
+  height: 14px;
+  border: 0;
+  background: #f7f8f6;
+}
+
+
+
+
+
 
 @media (min-width: 1024px) {
   .modelo-shell {

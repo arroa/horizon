@@ -57,6 +57,38 @@ export type ModelSnapshot = {
   variables: ModelVariable[];
   glossary: DomainGlossary[];
   monthLabels: string[];
+  balance?: FinancialStatement;
+};
+
+export type StatementRowKind = "account" | "group" | "total" | "spacer";
+
+export type StatementMonthNature = "real" | "proy" | "unknown";
+
+export type StatementRow = {
+  label: string;
+  kind: StatementRowKind;
+  values: string[];
+  excelRow: number;
+  /** outlineLevel de Excel (0 = raíz, 1..2 = anidados). */
+  outlineLevel?: number;
+  /** Fila oculta en el Excel al momento del ingest. */
+  excelHidden?: boolean;
+  /** El grupo partía colapsado en Excel (todos los hijos hidden). */
+  excelCollapsed?: boolean;
+  /** 1 o 2 según profundidad del grupo Excel. */
+  collapseLevel?: 1 | 2;
+  /** Descendientes ocultos al colapsar este nodo (abre hacia abajo). */
+  childExcelRows?: number[];
+  /** Sangría visual tras reordenar totales de sección hacia abajo. */
+  displayDepth?: number;
+};
+
+export type FinancialStatement = {
+  sheet: string;
+  months: string[];
+  /** Real / Proy por columna, leído de la fila sobre BGMeses. */
+  monthNatures: StatementMonthNature[];
+  rows: StatementRow[];
 };
 
 export type VariableDependency = {
