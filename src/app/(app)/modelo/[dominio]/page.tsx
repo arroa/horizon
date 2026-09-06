@@ -49,10 +49,10 @@ export default function DominioPage() {
           <ul className="mt-3 space-y-1.5 text-sm">
             {domain.inputs.length === 0 && <li className="text-[var(--muted)]">Sin inputs en este ámbito</li>}
             {domain.inputs.map((item) => (
-              <li key={item.name}>
+              <li key={`input-${item.name}`}>
                 {snapshot || item.variants.length > 0 ? (
                   <Link
-                    href={`/modelo/${domain.id}/${variableSlug(item.name)}`}
+                    href={`/modelo/${domain.id}/${variableSlug(item.name, item.kind)}`}
                     className="text-[var(--green)] hover:underline"
                   >
                     {formatVariableLabel(item)}
@@ -69,10 +69,10 @@ export default function DominioPage() {
           <ul className="mt-3 space-y-1.5 text-sm">
             {domain.outputs.length === 0 && <li className="text-[var(--muted)]">Sin outputs en este ámbito</li>}
             {domain.outputs.map((item) => (
-              <li key={item.name}>
+              <li key={`output-${item.name}`}>
                 {snapshot || item.variants.length > 0 ? (
                   <Link
-                    href={`/modelo/${domain.id}/${variableSlug(item.name)}`}
+                    href={`/modelo/${domain.id}/${variableSlug(item.name, item.kind)}`}
                     className="text-[var(--green)] hover:underline"
                   >
                     {formatVariableLabel(item)}

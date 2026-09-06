@@ -12,7 +12,6 @@ const nav = [
   { href: "/modelo", label: "Modelo" },
   { href: "/balance", label: "Balance" },
   { href: "/eerr", label: "EERR" },
-  { href: "/eerr-linea", label: "EERR × línea" },
 ];
 
 export function AppShell({ user, children }: { user: HorizonUser; children: React.ReactNode }) {

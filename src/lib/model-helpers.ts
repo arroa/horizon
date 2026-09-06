@@ -8,8 +8,9 @@ export function formatVariableLabel(group: VariableGroup) {
   return group.name;
 }
 
-export function variableSlug(name: string) {
-  return slugifyDomain(name);
+/** Slug único por nombre + input/output (pueden repetirse nombres entre tipos). */
+export function variableSlug(name: string, kind: "input" | "output") {
+  return `${slugifyDomain(name)}--${kind}`;
 }
 
 export function getDomainById(domains: ModelDomain[], id: string) {
@@ -27,6 +28,13 @@ export function getDomainNeighbors(domains: ModelDomain[], id: string) {
 }
 
 export function findVariableGroup(domain: ModelDomain, slug: string) {
-  const all = [...domain.inputs, ...domain.outputs];
-  return all.find((group) => variableSlug(group.name) === slug) ?? null;
+  const keyed = [...domain.inputs, ...domain.outputs].find(
+    (group) => variableSlug(group.name, group.kind) === slug,
+  );
+  if (keyed) return keyed;
+
+  // Compat con URLs viejas sin --input/--output.
+  return (
+    [...domain.inputs, ...domain.outputs].find((group) => slugifyDomain(group.name) === slug) ?? null
+  );
 }

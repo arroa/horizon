@@ -8,7 +8,7 @@ import {
   orderAmbits,
   stripDomainPrefix,
 } from "./domain-order";
-import { balanceSheetNameFromRanges, parseBalanceStatement } from "./parse-balance";
+import { balanceSheetNameFromRanges, eerrSheetNameFromRanges, parseBalanceStatement, parseEerrStatement } from "./parse-balance";
 
 import type {
   DataType,
@@ -628,6 +628,14 @@ export async function parseModelFile(
     if (fallbackBalance) sheetsToLoad.add(fallbackBalance);
   }
 
+  const eerrSheet = eerrSheetNameFromRanges(probeNames);
+  if (eerrSheet) {
+    sheetsToLoad.add(eerrSheet);
+  } else {
+    const fallbackEerr = findSheetName(["EERR MdS", "EERR"], probe.SheetNames || []);
+    if (fallbackEerr) sheetsToLoad.add(fallbackEerr);
+  }
+
   report(35, "Cargando hojas del modelo…");
   await yieldToUi();
   const workbook = XLSX.read(data, {
@@ -684,7 +692,11 @@ export async function parseModelFile(
   await yieldToUi();
   const balance = parseBalanceStatement(workbook, namedRanges);
 
-  report(92, "Armando el recorrido…");
+  report(90, "Leyendo Estado de resultados…");
+  await yieldToUi();
+  const eerr = parseEerrStatement(workbook, namedRanges);
+
+  report(96, "Armando el recorrido…");
   await yieldToUi();
   const domains = buildDomains(variables, glossary);
 
@@ -697,6 +709,7 @@ export async function parseModelFile(
     glossary,
     monthLabels,
     balance: balance ?? undefined,
+    eerr: eerr ?? undefined,
   };
 }
 

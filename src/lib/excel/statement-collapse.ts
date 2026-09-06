@@ -1,9 +1,18 @@
-import type { StatementRow } from "./types";
+import type { StatementColumn, StatementRow } from "./types";
 
 const MAX_OUTLINE_DEPTH = 2;
 
+export type RowCollapseOptions = {
+  /** Balance: hijos debajo del padre. EERR: hijos encima (summary below). */
+  outlineChildren: "after" | "before";
+  /** Totales de sección tipo Activos corrientes (Balance). */
+  sectionTotals?: boolean;
+  /** Partir con todos los grupos de fila colapsados (vista Excel “todo colapsado”). */
+  defaultCollapsed?: boolean;
+};
+
 function isGrandTotal(label: string) {
-  return /^total\b/i.test(label) || /^patrimonio total$/i.test(label);
+  return /^total\b/i.test(label) || /^patrimonio total$/i.test(label) || /^resultado neto$/i.test(label);
 }
 
 /**
@@ -36,44 +45,67 @@ function promoteHiddenOrphans(rows: StatementRow[]) {
   }
 }
 
-/**
- * Nivel 2: outline Excel. Padre visible arriba; hijos debajo (abre hacia abajo).
- */
-function attachOutlineGroups(rows: StatementRow[]) {
-  for (let i = 0; i < rows.length; i++) {
-    const row = rows[i];
-    if (row.kind === "spacer" || row.kind === "total") continue;
+function collectOutlineChildren(rows: StatementRow[], parentIndex: number, direction: "after" | "before") {
+  const parentLevel = Math.min(MAX_OUTLINE_DEPTH, rows[parentIndex].outlineLevel ?? 0);
+  if (parentLevel >= MAX_OUTLINE_DEPTH) return { childExcelRows: [] as number[], hiddenCount: 0 };
 
-    const parentLevel = Math.min(MAX_OUTLINE_DEPTH, row.outlineLevel ?? 0);
-    if (parentLevel >= MAX_OUTLINE_DEPTH) continue;
+  const childExcelRows: number[] = [];
+  let hiddenCount = 0;
 
-    const childExcelRows: number[] = [];
-    let hiddenCount = 0;
-    for (let j = i + 1; j < rows.length; j++) {
-      if (rows[j].kind === "spacer" || rows[j].kind === "total") break;
+  if (direction === "after") {
+    for (let j = parentIndex + 1; j < rows.length; j++) {
+      if (rows[j].kind === "spacer") break;
       const childLevel = Math.min(MAX_OUTLINE_DEPTH, rows[j].outlineLevel ?? 0);
       if (childLevel <= parentLevel) break;
       childExcelRows.push(rows[j].excelRow);
       if (rows[j].excelHidden) hiddenCount += 1;
     }
+  } else {
+    for (let j = parentIndex - 1; j >= 0; j--) {
+      // En EERR hay filas vacías entre el detalle y el total (p. ej. Impuestos → Resultado Neto).
+      if (rows[j].kind === "spacer") continue;
+      const childLevel = Math.min(MAX_OUTLINE_DEPTH, rows[j].outlineLevel ?? 0);
+      if (childLevel <= parentLevel) break;
+      childExcelRows.unshift(rows[j].excelRow);
+      if (rows[j].excelHidden) hiddenCount += 1;
+    }
+  }
 
+  return { childExcelRows, hiddenCount };
+}
+
+/**
+ * Outline Excel → grupos colapsables.
+ * collapseLevel 2 (detalle de cuenta / línea).
+ */
+function attachOutlineGroups(
+  rows: StatementRow[],
+  direction: "after" | "before",
+  defaultCollapsed?: boolean,
+) {
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    if (row.kind === "spacer") continue;
+    if (row.childExcelRows?.length) continue;
+
+    const { childExcelRows, hiddenCount } = collectOutlineChildren(rows, i, direction);
     if (!childExcelRows.length) continue;
 
-    row.kind = "group";
+    if (row.kind === "account") row.kind = "group";
     row.collapseLevel = 2;
     row.childExcelRows = childExcelRows;
-    row.excelCollapsed = hiddenCount === childExcelRows.length;
+    row.excelCollapsed = defaultCollapsed || hiddenCount === childExcelRows.length;
   }
 }
 
 /**
  * Nivel 1: subtotales / totales de sección (en Excel vienen summary-below).
- * Luego se reordenan para mostrar el total arriba y el detalle debajo.
  */
 function attachSectionTotalGroups(rows: StatementRow[]) {
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
     if (row.kind !== "total") continue;
+    if (row.childExcelRows?.length) continue;
 
     let start = i - 1;
     if (isGrandTotal(row.label)) {
@@ -95,28 +127,24 @@ function attachSectionTotalGroups(rows: StatementRow[]) {
 
     row.collapseLevel = 1;
     row.childExcelRows = childExcelRows;
-    // Subtotales de sección parten colapsados; "Total …" queda expandido.
     row.excelCollapsed = !isGrandTotal(row.label);
   }
 }
 
 /**
- * Excel pone el total debajo del detalle; lo movemos arriba para que
- * expandir/colapsar abra hacia abajo (como el outline).
+ * Si el padre venía debajo del detalle (Excel), lo subimos para abrir hacia abajo.
  */
-function reorderSectionTotalsDownward(rows: StatementRow[]): StatementRow[] {
-  const sectionParents = rows.filter(
-    (row) => row.collapseLevel === 1 && (row.childExcelRows?.length ?? 0) > 0,
-  );
-  if (!sectionParents.length) {
+function reorderGroupsDownward(rows: StatementRow[]): StatementRow[] {
+  const parents = rows.filter((row) => (row.childExcelRows?.length ?? 0) > 0);
+  if (!parents.length) {
     for (const row of rows) row.displayDepth = 0;
     return rows;
   }
 
   const exclusiveKids = new Map<number, number[]>();
-  for (const parent of sectionParents) {
+  for (const parent of parents) {
     const childSet = new Set(parent.childExcelRows);
-    const nested = sectionParents.filter(
+    const nested = parents.filter(
       (other) => other.excelRow !== parent.excelRow && childSet.has(other.excelRow),
     );
     const claimedByNested = new Set<number>();
@@ -159,12 +187,39 @@ function reorderSectionTotalsDownward(rows: StatementRow[]): StatementRow[] {
 }
 
 /**
- * Dos niveles:
- * 1) Totales de sección (reordenados: total arriba, detalle abajo)
- * 2) Outline Excel (cuenta → desglose, abre hacia abajo)
+ * Agrupaciones de columnas Excel (meses bajo trimestre, trimestres bajo año).
+ * Summary a la derecha: hijos = columnas contiguas a la izquierda con mayor outlineLevel.
  */
-export function attachCollapseGroups(rows: StatementRow[]) {
-  for (const row of rows) {
+export function attachColumnGroups(columns: StatementColumn[]) {
+  for (let i = 0; i < columns.length; i++) {
+    const parent = columns[i];
+    const parentLevel = parent.outlineLevel ?? 0;
+    const childIndexes: number[] = [];
+    let hiddenCount = 0;
+
+    for (let j = i - 1; j >= 0; j--) {
+      const childLevel = columns[j].outlineLevel ?? 0;
+      if (childLevel <= parentLevel) break;
+      childIndexes.unshift(columns[j].index);
+      if (columns[j].excelHidden) hiddenCount += 1;
+    }
+
+    if (!childIndexes.length) continue;
+    parent.childIndexes = childIndexes;
+    parent.excelCollapsed = hiddenCount === childIndexes.length;
+  }
+  return columns;
+}
+
+export function attachCollapseGroups(
+  rows: StatementRow[],
+  options: RowCollapseOptions = { outlineChildren: "after", sectionTotals: true },
+) {
+  // El outline de Excel asume orden de filas del libro. Si el snapshot ya viene
+  // reordenado (padre arriba), "before" asignaría los hijos del bloque anterior.
+  const ordered = [...rows].sort((a, b) => a.excelRow - b.excelRow);
+
+  for (const row of ordered) {
     if (row.kind === "group") row.kind = "account";
     row.childExcelRows = undefined;
     row.collapseLevel = undefined;
@@ -172,9 +227,11 @@ export function attachCollapseGroups(rows: StatementRow[]) {
     row.displayDepth = undefined;
   }
 
-  promoteHiddenOrphans(rows);
-  attachOutlineGroups(rows);
-  attachSectionTotalGroups(rows);
+  promoteHiddenOrphans(ordered);
+  attachOutlineGroups(ordered, options.outlineChildren, options.defaultCollapsed);
+  if (options.sectionTotals !== false) {
+    attachSectionTotalGroups(ordered);
+  }
 
-  return reorderSectionTotalsDownward(rows);
+  return reorderGroupsDownward(ordered);
 }

@@ -1,38 +1,45 @@
-import { ReportChat } from "@/components/report-chat";
+"use client";
 
-const rows = ["Ventas", "Costo de ventas", "Margen", "GAV", "Otros ingresos y gastos", "Utilidad neta"];
+import { useMemo } from "react";
+
+import { useModel } from "@/components/model-provider";
+import { ModelLoading } from "@/components/model-loading";
+import { StatementTable } from "@/components/statement-table";
 
 export default function EerrPage() {
+  const { snapshot, ready } = useModel();
+  const eerr = snapshot?.eerr;
+
+  const emptyHint = useMemo(() => {
+    if (!snapshot) return "Carga el Excel con Cargar modelo para ver el Estado de Resultados.";
+    if (!eerr) return "El modelo cargado no trae rangos EERRCuenta / EERRMeses / EERRValores.";
+    return null;
+  }, [snapshot, eerr]);
+
+  if (!ready) return <ModelLoading />;
+
   return (
-    <main className="grid gap-6 px-6 py-12 lg:grid-cols-[1.4fr_.8fr] lg:px-16">
-      <section>
+    <main className="statement-page">
+      <header className="statement-page-header">
         <p className="kicker">Como está en el Excel</p>
         <h1 className="font-serif text-4xl">Estado de resultados</h1>
-        <p className="mt-3 max-w-2xl text-sm text-[var(--muted)]">
-          Hoja EERR MdS · rangos <code>EERRCuenta</code> / <code>EERRValores</code>.
+        <p className="mt-3 max-w-3xl text-sm text-[var(--muted)]">
+          Hoja <code>EERR MdS</code> · <code>EERRCuenta</code> / <code>EERRValores</code>. Misma
+          lógica que Balance, más agrupaciones de columnas (trimestres y años).
         </p>
-        <div className="mt-8 overflow-x-auto rounded-[13px] border border-[var(--line)] bg-white">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-[var(--paper)] text-xs uppercase tracking-wider text-[var(--muted)]">
-              <tr>
-                <th className="px-4 py-3">Cuenta</th>
-                <th className="px-4 py-3">jun-26</th>
-                <th className="px-4 py-3">jul-26</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
-                <tr key={row} className="border-t border-[var(--line)]">
-                  <td className="px-4 py-3">{row}</td>
-                  <td className="px-4 py-3 text-[var(--muted)]">—</td>
-                  <td className="px-4 py-3 text-[var(--muted)]">—</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
-      <ReportChat screen="EERR" />
+      </header>
+
+      {emptyHint ? (
+        <p className="mt-8 rounded-[13px] border border-[var(--line)] bg-[#f8f4ed] px-4 py-3 text-sm text-[#5f4d3d]">
+          {emptyHint}
+        </p>
+      ) : (
+        eerr && (
+          <div className="statement-page-canvas">
+            <StatementTable statement={eerr} />
+          </div>
+        )
+      )}
     </main>
   );
 }

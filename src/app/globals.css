@@ -873,6 +873,11 @@ button, input { font: inherit; }
   color: #1f5a3d;
 }
 
+.balance-legend-item.nature-grupo {
+  background: #efe8dc;
+  color: #5c4b32;
+}
+
 .balance-collapse-actions {
   display: flex;
   flex-wrap: wrap;
@@ -952,7 +957,34 @@ button, input { font: inherit; }
   border-radius: 13px;
   background: white;
   overflow: hidden;
-  max-height: min(70vh, 760px);
+  max-height: min(78vh, 920px);
+}
+
+.statement-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 48px 24px 56px;
+}
+
+@media (min-width: 1024px) {
+  .statement-page {
+    padding-left: 64px;
+    padding-right: 64px;
+  }
+}
+
+.statement-page-header {
+  flex: 0 0 auto;
+}
+
+.statement-page-canvas {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.statement-page-canvas .balance-table-wrap {
+  max-height: calc(100vh - 220px);
 }
 
 .balance-month-scroller {
@@ -1044,6 +1076,11 @@ button, input { font: inherit; }
   background: #f3faf6;
 }
 
+.balance-col-month[data-nature="grupo"] {
+  background: #f7f2ea;
+  font-weight: 650;
+}
+
 .balance-table thead .balance-col-month[data-nature="real"] {
   background: #e4e8e4;
   color: #3f4f47;
@@ -1052,6 +1089,30 @@ button, input { font: inherit; }
 .balance-table thead .balance-col-month[data-nature="proy"] {
   background: #e5f2ea;
   color: #1f5a3d;
+}
+
+.balance-table thead .balance-col-month[data-nature="grupo"] {
+  background: #efe6d8;
+  color: #5c4b32;
+}
+
+.balance-col-collapse-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  font-weight: 700;
+  color: inherit;
+  cursor: pointer;
+}
+
+.balance-col-group .balance-collapse-chevron {
+  margin-top: 0;
 }
 
 .balance-col-month.nature-boundary {
@@ -1064,6 +1125,10 @@ button, input { font: inherit; }
 
 .balance-row-total .balance-col-month[data-nature="proy"] {
   background: #ddeee4;
+}
+
+.balance-row-total .balance-col-month[data-nature="grupo"] {
+  background: #ebe2d4;
 }
 
 .balance-row-account td {

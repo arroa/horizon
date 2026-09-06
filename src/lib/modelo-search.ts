@@ -169,9 +169,9 @@ export function searchModelo(domains: ModelDomain[], query: string, limit = 24):
         const first = group.variants[0];
         const dim = [first?.account, first?.line, first?.family].filter(Boolean).join(" · ");
         hits.push({
-          id: `${kind}:${domain.id}:${variableSlug(group.name)}`,
+          id: `${kind}:${domain.id}:${variableSlug(group.name, kind)}`,
           kind,
-          href: `/modelo/${domain.id}/${variableSlug(group.name)}`,
+          href: `/modelo/${domain.id}/${variableSlug(group.name, kind)}`,
           title: group.name,
           subtitle: `${domain.number} ${domain.title} · ${kind}`,
           score,

@@ -55,7 +55,7 @@ function VariableBranch({
         <ul className="modelo-tree-vars" data-level="3">
           {groups.length === 0 && <li className="modelo-tree-empty">Sin {label.toLowerCase()}</li>}
           {groups.map((group) => {
-            const slug = variableSlug(group.name);
+            const slug = variableSlug(group.name, kind);
             const href = `/modelo/${domain.id}/${slug}`;
             const active = activeVariableSlug === slug;
             return (
@@ -92,10 +92,16 @@ export function ModeloTreeNav() {
   useEffect(() => {
     if (!domainId) return;
     setExpandedDomains((prev) => ({ ...prev, [domainId]: true }));
+    const kindFromSlug = activeVar?.endsWith("--output")
+      ? "output"
+      : activeVar?.endsWith("--input")
+        ? "input"
+        : null;
     setExpandedKinds((prev) => ({
       ...prev,
-      [`${domainId}:input`]: true,
-      [`${domainId}:output`]: true,
+      ...(kindFromSlug
+        ? { [`${domainId}:${kindFromSlug}`]: true }
+        : { [`${domainId}:input`]: true, [`${domainId}:output`]: true }),
     }));
     setMobileOpen(false);
   }, [domainId, activeVar]);

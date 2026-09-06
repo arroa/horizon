@@ -58,11 +58,26 @@ export type ModelSnapshot = {
   glossary: DomainGlossary[];
   monthLabels: string[];
   balance?: FinancialStatement;
+  eerr?: FinancialStatement;
 };
 
 export type StatementRowKind = "account" | "group" | "total" | "spacer";
 
-export type StatementMonthNature = "real" | "proy" | "unknown";
+export type StatementMonthNature = "real" | "proy" | "grupo" | "unknown";
+
+export type StatementColumnKind = "month" | "quarter" | "year" | "other";
+
+export type StatementColumn = {
+  index: number;
+  label: string;
+  nature: StatementMonthNature;
+  kind: StatementColumnKind;
+  outlineLevel: number;
+  excelHidden?: boolean;
+  /** Columnas detalle ocultas al colapsar este grupo (trimestre/año). */
+  childIndexes?: number[];
+  excelCollapsed?: boolean;
+};
 
 export type StatementRow = {
   label: string;
@@ -86,9 +101,16 @@ export type StatementRow = {
 export type FinancialStatement = {
   sheet: string;
   months: string[];
-  /** Real / Proy por columna, leído de la fila sobre BGMeses. */
+  /** Real / Proy / Grupo por columna. */
   monthNatures: StatementMonthNature[];
+  columns: StatementColumn[];
   rows: StatementRow[];
+  /** Cómo reconstruir grupos de fila en el cliente. */
+  rowCollapse?: {
+    outlineChildren: "after" | "before";
+    sectionTotals?: boolean;
+    defaultCollapsed?: boolean;
+  };
 };
 
 export type VariableDependency = {

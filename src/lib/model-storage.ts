@@ -20,6 +20,27 @@ export function loadModelSnapshot(): ModelSnapshot | null {
     if (snapshot.balance && (!snapshot.balance.monthNatures || snapshot.balance.monthNatures.length !== snapshot.balance.months.length)) {
       snapshot.balance.monthNatures = snapshot.balance.months.map(() => "unknown");
     }
+    if (snapshot.balance && !snapshot.balance.columns?.length) {
+      snapshot.balance.columns = snapshot.balance.months.map((label, index) => ({
+        index,
+        label,
+        nature: snapshot.balance!.monthNatures?.[index] ?? "unknown",
+        kind: "month" as const,
+        outlineLevel: 0,
+      }));
+    }
+    if (snapshot.eerr && (!snapshot.eerr.monthNatures || snapshot.eerr.monthNatures.length !== snapshot.eerr.months.length)) {
+      snapshot.eerr.monthNatures = snapshot.eerr.months.map(() => "unknown");
+    }
+    if (snapshot.eerr && !snapshot.eerr.columns?.length) {
+      snapshot.eerr.columns = snapshot.eerr.months.map((label, index) => ({
+        index,
+        label,
+        nature: snapshot.eerr!.monthNatures?.[index] ?? "unknown",
+        kind: "month" as const,
+        outlineLevel: 0,
+      }));
+    }
     return snapshot;
   } catch {
     sessionStorage.removeItem(STORAGE_KEY);
