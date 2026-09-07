@@ -48,3 +48,5 @@ next-env.d.ts
 *.xlsx
 analizador*.html
 Analizador*.html
+
+.vercel

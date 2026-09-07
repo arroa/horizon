@@ -21,14 +21,14 @@ export function UploadModelButton() {
   }
 
   return (
-    <div className="flex max-w-[280px] items-center gap-2">
+    <div className="app-upload">
       <button
         type="button"
         onClick={() => inputRef.current?.click()}
         disabled={loading}
-        className="rounded-lg border border-[var(--green)] bg-[var(--green)] px-3 py-2 text-xs font-bold text-white disabled:cursor-wait disabled:opacity-70"
+        className="app-upload-btn"
       >
-        {loading ? "Cargando…" : "Cargar modelo"}
+        {loading ? "Cargando…" : snapshot ? "Cambiar Excel" : "Cargar modelo"}
       </button>
       <input
         ref={inputRef}
@@ -38,7 +38,7 @@ export function UploadModelButton() {
         onChange={handleChange}
       />
       {snapshot && !loading && (
-        <span className="truncate text-[10px] text-[var(--muted)]" title={snapshot.fileName}>
+        <span className="app-upload-file" title={snapshot.fileName}>
           {snapshot.fileName}
         </span>
       )}

@@ -21,9 +21,9 @@ export default async function HomePage() {
           <div className="mt-10">
             <Link
               href={user ? "/modelo" : "/sign-in"}
-              className="inline-flex items-center gap-5 rounded-lg bg-[var(--green)] px-6 py-4 text-sm font-bold text-white"
+              className="inline-flex items-center gap-5 rounded-lg bg-[var(--green)] px-6 py-4 text-sm font-bold !text-[var(--lime)]"
             >
-              {user ? "Continuar el recorrido" : "Entrar al modelo"} <span className="text-[var(--lime)]">→</span>
+              {user ? "Continuar el recorrido" : "Entrar al modelo"} →
             </Link>
           </div>
         </div>

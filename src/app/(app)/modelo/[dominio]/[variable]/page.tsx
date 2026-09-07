@@ -21,25 +21,10 @@ export default function VariablePage() {
 
   return (
     <main className="px-6 py-12 lg:px-12 xl:px-16">
-      <p className="text-xs text-[var(--muted)]">
-        {domain.number} {domain.title}
-      </p>
-      <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="kicker">{group.kind === "output" ? "Variable output" : "Variable input"}</p>
-          <h1 className="font-serif text-3xl lg:text-4xl">{group.name}</h1>
-          {group.variantCount > 1 && (
-            <p className="mt-2 text-sm text-[var(--muted)]">{group.variantCount} variantes en este ámbito</p>
-          )}
-        </div>
-        <span className="rounded-full bg-[var(--green)] px-3 py-1 text-xs font-bold uppercase tracking-wider text-white">
-          {group.kind}
-        </span>
-      </div>
-
-      <div className="mt-8">
-        <VariableAnalysisView group={group} />
-      </div>
+      <VariableAnalysisView
+        group={group}
+        domainLabel={`${domain.number} ${domain.title}`}
+      />
     </main>
   );
 }

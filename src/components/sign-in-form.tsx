@@ -1,7 +1,6 @@
 "use client";
 
 import { useSignIn } from "@clerk/nextjs";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 type Props = {
@@ -120,7 +119,6 @@ function DevSignInForm() {
 
 function ClerkSignInForm() {
   const clerkSignIn = useSignIn();
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [step, setStep] = useState<"email" | "code">("email");
@@ -184,14 +182,19 @@ function ClerkSignInForm() {
     setFieldError("");
     setLoading(true);
     try {
-      const result = await signIn.attemptFirstFactor({ strategy: "email_code", code });
+      const result = await signIn.attemptFirstFactor({
+        strategy: "email_code",
+        code: code.trim(),
+      });
       if (result.status === "complete" && result.createdSessionId) {
         await setActive({ session: result.createdSessionId });
-        router.push("/modelo");
-        router.refresh();
+        // Hard navigation: la cookie de Clerk debe estar lista antes de /modelo
+        window.location.assign("/modelo");
+        return;
       }
+      setError(`No se pudo completar el acceso (${result.status}).`);
     } catch {
-      setError("Código inválido.");
+      setError("Código inválido o expirado. Pide uno nuevo.");
     } finally {
       setLoading(false);
     }

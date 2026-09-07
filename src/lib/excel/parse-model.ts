@@ -405,24 +405,12 @@ function readMonthValues(
 ): MonthValue[] {
   return labels.map((label, index) => {
     const address = XLSX.utils.encode_cell({ r: excelRow - 1, c: startCol + index });
-    const cell = sheet[address];
     const display = getCellDisplay(sheet, address);
 
-    // Prefer cached/formatted value for the month strip; formula lives in the formula panel.
-    if (display) {
-      return { label, value: display, isFormula: false };
-    }
-
-    if (cell?.f) {
-      const formula = String(cell.f).replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
-      return {
-        label,
-        value: formula.startsWith("=") ? formula : `=${formula}`,
-        isFormula: true,
-      };
-    }
-
-    return { label, value: "", isFormula: false };
+    // Month strip = evaluated value only. Empty string from IF(...;"") must stay empty,
+    // not fall back to dumping the shared Input formula into the cards.
+    // The formula lives in getRealFormula → panel "Ver fórmula".
+    return { label, value: display, isFormula: false };
   });
 }
 
